@@ -8,9 +8,9 @@ pub fn layer_shell_configure(window: &ApplicationWindow) {
     window.set_keyboard_mode(KeyboardMode::OnDemand);
     window.set_focusable(true);
     window.auto_exclusive_zone_enable();
-    window.set_anchor(Edge::Right, false);
+    window.set_anchor(Edge::Right, true);
     window.set_anchor(Edge::Left, true);
     window.set_anchor(Edge::Top, true);
-    window.set_anchor(Edge::Bottom, false);
+    window.set_anchor(Edge::Bottom, true);
     window.set_visible(false);
 }

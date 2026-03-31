@@ -1,4 +1,5 @@
 use crate::AppInfo;
+use std::collections::HashMap;
 use std::fs;
 
 use gtk::prelude::*;
@@ -10,13 +11,23 @@ use std::process::Command;
 
 pub fn list_applications() -> Vec<AppInfo> {
     let mut apps = vec![];
-    let paths = [
+    let mut paths = vec![
         "/usr/share/applications".to_string(),
-        format!(
-            "{}/.local/share/applications",
-            std::env::var("HOME").unwrap()
-        ),
+        "/usr/local/share/applications".to_string(),
     ];
+
+    if let Ok(home) = std::env::var("HOME") {
+        paths.push(format!("{}/.local/share/applications", home));
+    }
+
+    if let Ok(xdg_data_dirs) = std::env::var("XDG_DATA_DIRS") {
+        for dir in xdg_data_dirs.split(':') {
+            let path = format!("{}/applications", dir);
+            if !paths.contains(&path) {
+                paths.push(path);
+            }
+        }
+    }
 
     for path in paths {
         let entries = match fs::read_dir(path) {
@@ -37,6 +48,52 @@ pub fn list_applications() -> Vec<AppInfo> {
 
             if let Some(app) = parse_desktop_file(&content) {
                 apps.push(app);
+            }
+        }
+    }
+
+    apps
+}
+
+pub fn applications() -> HashMap<String, AppInfo> {
+    let mut apps = HashMap::new();
+    let mut paths = vec![
+        "/usr/share/applications".to_string(),
+        "/usr/local/share/applications".to_string(),
+    ];
+
+    if let Ok(home) = std::env::var("HOME") {
+        paths.push(format!("{}/.local/share/applications", home));
+    }
+
+    if let Ok(xdg_data_dirs) = std::env::var("XDG_DATA_DIRS") {
+        for dir in xdg_data_dirs.split(':') {
+            let path = format!("{}/applications", dir);
+            if !paths.contains(&path) {
+                paths.push(path);
+            }
+        }
+    }
+
+    for path in paths {
+        let entries = match fs::read_dir(path) {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
+
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().is_none_or(|ext| ext != "desktop") {
+                continue;
+            }
+
+            let content = match fs::read_to_string(&path) {
+                Ok(c) => c,
+                Err(_) => continue,
+            };
+
+            if let Some(app) = parse_desktop_file(&content) {
+                apps.insert(app.clone().name, app);
             }
         }
     }
@@ -80,6 +137,7 @@ fn parse_desktop_file(content: &str) -> Option<AppInfo> {
         name: name?,
         exec: exec?,
         icon,
+        vbox: None,
     })
 }
 
@@ -102,24 +160,24 @@ pub fn filter_applications(
         vbox.remove(&widget);
     }
 
-    let filtered: Vec<AppInfo> = applications
+    let mut filtered: Vec<AppInfo> = applications
         .iter()
         .filter(|AppInfo { name, .. }| name.to_lowercase().contains(&search_text.to_lowercase()))
         .cloned()
         .collect();
 
-    for AppInfo { name, icon, exec } in &filtered {
+    for app in &mut filtered {
         let hbox = GtkBox::new(Orientation::Horizontal, 3);
         hbox.add_css_class("app_container");
         hbox.set_hexpand(true);
 
-        if let Some(ref icon_name) = icon {
+        if let Some(ref icon_name) = app.icon {
             let image = load_icon(icon_name, 16);
             hbox.append(&image);
         }
 
-        let button = Button::with_label(name);
-        let exec_cmd = exec.clone();
+        let button = Button::with_label(&app.name);
+        let exec_cmd = app.exec.clone();
 
         let window_clone = window.clone();
         button.connect_clicked(move |_| {

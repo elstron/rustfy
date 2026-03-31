@@ -1,66 +1,42 @@
+:root {
+  --clr-surface-a0: #101218;
+  --clr-surface-a10: #17181f;
+  --clr-surface-a20: #1d1e26;
+  --clr-surface-a30: #51505a;
+  --clr-surface-a40: #6c6b74;
+  --clr-surface-a50: #87868e;
+
+  --primary-color: #e46c6c;
+  --background-color: var(--clr-surface-a0);
+  --background-color-secondary: var(--clr-surface-a10);
+  --background-color-tertiary: var(--clr-surface-a20);
+
+  --border-color: rgba(255, 255, 255, 0.1);
+  --text-color: #ffffff;
+  --font-family: JetBrainsMono;
+}
+
 * {
   all: unset;
   background-color: transparent;
   color: #ffffff;
   font-family: JetBrainsMono;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 window {
-  background-color: rgba(35, 38, 73, 0.93);
+  background-color: transparent;
+
   border-radius: 15px;
   margin-left: 3px;
   margin-right: 3px;
   box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
-.left-section {
-  background-color: #333333;
+
+.main-box {
+  background-color: var(--background-color);
 }
 
-.right-section {
-  background-color: #444444;
-}
-
-.center-section {
-  background-color: rgba(84, 6, 255, 0.33);
-  padding: 0 20px;
-}
-
-.center-section,
-.left-section,
-.right-section {
-  border-radius: 20px;
-}
-
-.workspace,
-.workspace-active {
-  font-size: 10px;
-  margin: 0 10px;
-  background-color: transparent;
-  transition: background-color 0.8s ease;
-  cursor: pointer;
-}
-.workspace-active {
-  color: #ffffff;
-  font-weight: bold;
-  transition: color 0.8s ease;
-}
-.workspace:hover {
-  color: #e46c6c;
-}
-
-.workspace-active {
-  border: none;
-  color: #e46c6c;
-}
-
-.app_container button {
-  background-color: transparent;
-}
-
-.app_container:hover {
-  background-color: rgba(26, 29, 64, 0.7);
-}
 label {
   background-color: transparent;
   font-size: 12px;
@@ -70,9 +46,10 @@ label {
   padding: 0;
 }
 
-entry {
+.entry-box {
   padding: 10px;
-  background-color: rgba(26, 29, 64, 0.95);
+  background-color: var(--background-color-secondary);
+  border-radius: 50px;
 }
 
 box {
@@ -81,10 +58,11 @@ box {
   margin: 5px;
 }
 
-box:hover {
-  background-color: transparent;
-  border-radius: 10px;
+.selected {
+  background-color: var(--background-color-tertiary);
+  border: 1px solid #ffffff;
 }
+
 popover {
   border-radius: 8px;
   padding: 10px;
@@ -92,14 +70,36 @@ popover {
 
 button {
   padding: 10px 20px;
-  background-color: rgba(26, 29, 64, 1);
+  background-color: var(--background-color-tertiary);
   color: #ffffff !important;
   border: none;
   border-radius: 9px;
 }
 
+button.selected {
+  background-color: rgba(26, 29, 64, 0.7);
+}
+
 button:hover {
-  background-color: rgba(34, 38, 73, 0.7);
+  background-color: var(--background-color-tertiary);
   border: 0px solid #ffffff;
   border-radius: 9px;
+}
+
+.app-button {
+  background-color: transparent;
+  color: #ffffff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.app-button.selected {
+  outline: none;
+  background-color: var(--background-color-tertiary);
+}
+
+
+.scroll-box {
+  transition: opacity 0.3s ease;
 }

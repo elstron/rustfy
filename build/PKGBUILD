@@ -1,0 +1,25 @@
+# Maintainer: stron <contact@stron.me>
+pkgname=rustfy
+pkgver=0.0.05
+pkgrel=1
+pkgdesc="App launcher and menu for Wayland compositors"
+arch=("x86_64")
+url="https://github.com/elstron/hybar"
+license=("Apache-2.0")
+
+depends=()
+makedepends=("rust" "cargo")
+
+source=()
+sha256sums=()
+
+build() {
+  cd "$startdir/.."
+  cargo build --release
+}
+
+package() {
+  cd "$startdir/.."
+  install -Dm755 target/release/rustfy \
+    "$pkgdir/usr/bin/rustfy"
+}

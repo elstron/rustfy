@@ -1,137 +1,182 @@
-use gtk::prelude::*;
-use gtk::{Align, Application, ApplicationWindow, Box as GtkBox, Entry, Orientation};
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use gtk::{prelude::*, GestureClick, Revealer};
+use gtk::{Application, ApplicationWindow, Box as GtkBox, Entry, Orientation};
 use gtk4_layer_shell::LayerShell;
 mod config;
+mod enums;
+mod rustfy;
 mod utils;
 use config::layer_shell_configure;
-use utils::{
-    applications::{filter_applications, list_applications},
-    css,
-};
+use utils::css;
+
+use crate::rustfy::Rustfy;
+
+pub enum State {
+    Normal,
+    Search,
+}
 
 #[derive(Debug, Clone)]
 pub struct AppInfo {
     name: String,
     exec: String,
     icon: Option<String>,
+    vbox: Option<GtkBox>,
 }
 fn main() {
     let app = Application::builder()
         .application_id("com.example.LayerPanel")
         .build();
 
-    app.connect_activate(|app| {
-        let list_applications: Vec<AppInfo> = list_applications();
+    app.connect_activate(move |app| {
+        let rustfy = Rc::new(RefCell::new(Rustfy::new(app)));
 
         css::load_css();
 
-        let window = ApplicationWindow::builder()
-            .application(app)
-            .default_width(320)
-            .default_height(600)
-            .title("Panel de apps")
-            .build();
-
-        LayerShell::init_layer_shell(&window);
-        layer_shell_configure(&window);
+        layer_shell_configure(&rustfy.borrow().window);
+        let current_index = Rc::new(RefCell::new(0));
 
         let main_box = GtkBox::new(Orientation::Vertical, 0);
-
-        let vbox = GtkBox::new(Orientation::Vertical, 0);
-        vbox.set_halign(Align::Fill);
-        vbox.set_valign(Align::Start);
+        main_box.add_css_class("main-box");
+        main_box.set_width_request(600);
+        main_box.set_halign(gtk::Align::Center);
+        main_box.set_valign(gtk::Align::Center);
+        main_box.set_baseline_position(gtk::BaselinePosition::Center);
 
         let search_entry = Entry::new();
-        search_entry.set_placeholder_text(Some("Buscar..."));
+        search_entry.set_placeholder_text(Some("Search..."));
         search_entry.set_hexpand(true);
 
-        // Estado compartido para el índice seleccionado
-        use std::cell::RefCell;
-        use std::rc::Rc;
-        let selected_index = Rc::new(RefCell::new(0));
-        let filtered_apps = Rc::new(RefCell::new(list_applications.clone()));
+        let vbox = rustfy.borrow().vbox.clone();
+        let scrolled_window = gtk::ScrolledWindow::builder()
+            .min_content_width(220)
+            .min_content_height(100)
+            .child(&vbox)
+            .build();
+        scrolled_window.add_css_class("scroll-box");
+        let revealer = Revealer::builder()
+            .child(&scrolled_window)
+            // Puedes cambiar la animación: Crossfade, SlideRight, SlideUp, etc.
+            .transition_type(gtk::RevealerTransitionType::SlideDown)
+            .transition_duration(500) // Duración en milisegundos (medio segundo)
+            .reveal_child(false) // Empieza oculto
+            .build();
+        let rustfy_clone = Rc::clone(&rustfy);
+        let current_index_clone = Rc::clone(&current_index);
 
         search_entry.connect_changed({
-            let vbox = vbox.clone();
-            let applications = list_applications.clone();
-            let win = window.clone();
-            let selected_index = selected_index.clone();
-            let filtered_apps = filtered_apps.clone();
+            let revealer_clone = revealer.clone();
             move |entry| {
-                let search_text = entry.text().to_string();
-                let filtered = filter_applications(&search_text, &vbox, &applications, &win);
-                *filtered_apps.borrow_mut() = filtered.clone();
-                *selected_index.borrow_mut() = 0;
+                revealer_clone.set_reveal_child(false);
+
+                let search_type = entry
+                    .text()
+                    .as_str()
+                    .parse::<enums::SeatchType>()
+                    .unwrap_or(enums::SeatchType::App);
+                match search_type {
+                    enums::SeatchType::Calculator => println!("Search type: Calculator"),
+                    enums::SeatchType::Web => println!("Search type: Web"),
+                    enums::SeatchType::WebSearch => println!("Search type: Web Search"),
+                    enums::SeatchType::File => println!("Search type: File"),
+                    enums::SeatchType::App => {
+                        let mut rustfy = rustfy_clone.borrow_mut();
+                        let search_text = entry.text().to_string();
+                        rustfy.filter_apps(&search_text);
+                        *current_index_clone.borrow_mut() = 0;
+
+                        revealer_clone.set_reveal_child(!search_text.is_empty());
+                    }
+                }
             }
         });
 
-        // Manejar teclas arriba/abajo
-        search_entry.add_controller({
-            let selected_index = selected_index.clone();
-            let filtered_apps = filtered_apps.clone();
-            let key_controller = gtk::EventControllerKey::new();
-            let win = window.clone();
-            key_controller.set_propagation_phase(gtk::PropagationPhase::Capture);
-            key_controller.connect_key_pressed(move |_, keyval, _, _| {
-                use gtk::gdk::Key;
-                let mut idx: usize = *selected_index.borrow();
-                let apps = filtered_apps.borrow();
-                let len = apps.len();
-                if len == 0 {
-                    return false.into();
+        let rustfy_clone = Rc::clone(&rustfy);
+
+        let key_controller = gtk::EventControllerKey::new();
+        key_controller.set_propagation_phase(gtk::PropagationPhase::Capture);
+        key_controller.connect_key_pressed(move |_, keyval, _, _| {
+            use gtk::gdk::Key;
+            let mut idx: usize = *current_index.borrow();
+            let len = rustfy_clone.borrow().filtered_apps.borrow().len() as i32 - 1;
+            rustfy_clone.borrow().deselect_all_widgets();
+
+            match keyval {
+                Key::Up => {
+                    idx = idx.saturating_sub(1);
+                    *current_index.borrow_mut() = idx;
+
+                    match rustfy_clone.borrow().search_widget(idx as i32) {
+                        Some(widget) => widget.add_css_class("selected"),
+                        None => println!("No widget found for index: {}", idx as i32),
+                    }
+
+                    true.into()
                 }
+                Key::Down => {
+                    let index = *current_index.borrow();
 
-                match keyval {
-                    Key::Up => {
-                        idx = idx.saturating_sub(1);
-                        *selected_index.borrow_mut() = idx;
+                    if idx + 1 < len as usize {
+                        idx += 1;
+                    } else if idx + 1 > len as usize {
+                        idx = 0;
+                    }
+                    *current_index.borrow_mut() = idx;
 
-                        true.into()
-                    }
-                    Key::Down => {
-                        if idx + 1 < len {
-                            idx += 1;
-                        }
-                        *selected_index.borrow_mut() = idx;
-                        true.into()
-                    }
-                    Key::Return => {
-                        if let Some(app) = apps.get(idx) {
-                            let exec_cmd = app.exec.clone();
-                            let win = win.clone();
-
-                            std::process::Command::new("sh")
-                                .arg("-c")
-                                .arg(&exec_cmd)
-                                .current_dir(std::env::var("HOME").unwrap())
-                                .spawn()
-                                .ok();
-                            win.close();
-                        }
-                        true.into()
-                    }
-                    Key::Escape => {
-                        win.close();
-                        true.into()
+                    match rustfy_clone.borrow().search_widget(index as i32 + 1) {
+                        Some(widget) => widget.add_css_class("selected"),
+                        None => println!("No widget found for index: {}", index + 1),
                     }
 
-                    _ => false.into(),
+                    true.into()
                 }
-            });
-            key_controller
+                Key::Return => {
+                    rustfy_clone.borrow().launch_app(*current_index.borrow());
+                    rustfy_clone.borrow().window.hide();
+                    true.into()
+                }
+                Key::Escape => {
+                    rustfy_clone.borrow().window.hide();
+                    true.into()
+                }
+                _ => false.into(),
+            }
         });
 
-        main_box.append(&search_entry);
-        let scrolled_window = gtk::ScrolledWindow::builder()
-            .min_content_width(220)
-            .min_content_height(600)
-            .child(&vbox)
-            .build();
+        search_entry.add_controller(key_controller);
+        main_box.append(&revealer);
 
-        filter_applications("", &vbox, &list_applications, &window);
-        main_box.append(&scrolled_window);
-        window.set_child(Some(&main_box));
-        window.show();
+        let entry_box = GtkBox::new(Orientation::Horizontal, 0);
+        entry_box.set_valign(gtk::Align::End);
+        entry_box.add_css_class("entry-box");
+        entry_box.append(&search_entry);
+
+        let icon_search = gtk::Image::from_icon_name("system-search-symbolic");
+        icon_search.set_pixel_size(16);
+        entry_box.append(&icon_search);
+
+        main_box.append(&entry_box);
+
+        let gesture = GestureClick::new();
+        gesture.set_button(1);
+
+        let rustfy_clone = Rc::clone(&rustfy);
+        gesture.connect_pressed(move |_, _, _, _| {
+            rustfy_clone.borrow().window.hide();
+        });
+
+        let background = GtkBox::new(Orientation::Vertical, 0);
+        background.add_controller(gesture);
+
+        let overlay = gtk::Overlay::new();
+        overlay.set_child(Some(&background));
+        overlay.add_overlay(&main_box);
+
+        rustfy.borrow().window.set_child(Some(&overlay));
+        rustfy.borrow().window.show();
+        search_entry.grab_focus();
     });
 
     app.run();
