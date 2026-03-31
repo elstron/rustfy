@@ -1,6 +1,6 @@
 # Maintainer: stron <contact@stron.me>
 pkgname=rustfy
-pkgver=0.0.05
+pkgver=0.0.06
 pkgrel=1
 pkgdesc="App launcher and menu for Wayland compositors"
 arch=("x86_64")

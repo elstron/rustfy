@@ -2,8 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use gtk::{prelude::*, GestureClick, Revealer};
-use gtk::{Application, ApplicationWindow, Box as GtkBox, Entry, Orientation};
-use gtk4_layer_shell::LayerShell;
+use gtk::{Application, Box as GtkBox, Entry, Orientation};
 mod config;
 mod enums;
 mod rustfy;
@@ -23,6 +22,7 @@ pub struct AppInfo {
     name: String,
     exec: String,
     icon: Option<String>,
+    #[allow(dead_code)]
     vbox: Option<GtkBox>,
 }
 fn main() {
@@ -58,16 +58,16 @@ fn main() {
         scrolled_window.add_css_class("scroll-box");
         let revealer = Revealer::builder()
             .child(&scrolled_window)
-            // Puedes cambiar la animación: Crossfade, SlideRight, SlideUp, etc.
             .transition_type(gtk::RevealerTransitionType::SlideDown)
-            .transition_duration(500) // Duración en milisegundos (medio segundo)
-            .reveal_child(false) // Empieza oculto
+            .transition_duration(500)
+            .reveal_child(false)
             .build();
         let rustfy_clone = Rc::clone(&rustfy);
         let current_index_clone = Rc::clone(&current_index);
-
+        let current_search_type = Rc::new(RefCell::new(enums::SeatchType::App));
         search_entry.connect_changed({
             let revealer_clone = revealer.clone();
+            let search_type_clone = Rc::clone(&current_search_type);
             move |entry| {
                 revealer_clone.set_reveal_child(false);
 
@@ -76,10 +76,22 @@ fn main() {
                     .as_str()
                     .parse::<enums::SeatchType>()
                     .unwrap_or(enums::SeatchType::App);
+
+                *search_type_clone.borrow_mut() = search_type.clone();
                 match search_type {
                     enums::SeatchType::Calculator => println!("Search type: Calculator"),
                     enums::SeatchType::Web => println!("Search type: Web"),
-                    enums::SeatchType::WebSearch => println!("Search type: Web Search"),
+                    enums::SeatchType::WebSearch(w_type, _) => match w_type {
+                        enums::WebSearchType::Google => {
+                            println!("Search type: Web Search (Google)")
+                        }
+                        enums::WebSearchType::YouTube => {
+                            println!("Search type: Web Search (YouTube)")
+                        }
+                        enums::WebSearchType::Other(s) => {
+                            println!("Search type: Web Search (Other) - {}", s)
+                        }
+                    },
                     enums::SeatchType::File => println!("Search type: File"),
                     enums::SeatchType::App => {
                         let mut rustfy = rustfy_clone.borrow_mut();
@@ -94,7 +106,7 @@ fn main() {
         });
 
         let rustfy_clone = Rc::clone(&rustfy);
-
+        let search_type_clone_2 = Rc::clone(&current_search_type);
         let key_controller = gtk::EventControllerKey::new();
         key_controller.set_propagation_phase(gtk::PropagationPhase::Capture);
         key_controller.connect_key_pressed(move |_, keyval, _, _| {
@@ -133,8 +145,21 @@ fn main() {
                     true.into()
                 }
                 Key::Return => {
-                    rustfy_clone.borrow().launch_app(*current_index.borrow());
-                    rustfy_clone.borrow().window.hide();
+                    let search_type = search_type_clone_2.borrow();
+                    match search_type.clone() {
+                        enums::SeatchType::Calculator => {}
+                        enums::SeatchType::Web => {}
+                        enums::SeatchType::WebSearch(w_type, value) => {
+                            utils::web_browser::open_web_search(value.as_str(), w_type.clone());
+                            rustfy_clone.borrow().window.hide();
+                        }
+                        enums::SeatchType::File => {}
+                        enums::SeatchType::App => {
+                            rustfy_clone.borrow().launch_app(*current_index.borrow());
+                            rustfy_clone.borrow().window.hide();
+                        }
+                    }
+
                     true.into()
                 }
                 Key::Escape => {

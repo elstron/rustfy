@@ -1,11 +1,19 @@
 use std::str::FromStr;
 
+#[derive(Debug, Clone)]
 pub enum SeatchType {
     App,
     File,
     Calculator,
     Web,
-    WebSearch,
+    WebSearch(WebSearchType, String),
+}
+
+#[derive(Debug, Clone)]
+pub enum WebSearchType {
+    Google,
+    YouTube,
+    Other(String),
 }
 
 impl SeatchType {
@@ -19,12 +27,16 @@ impl SeatchType {
         str.starts_with("http://") || str.starts_with("https://")
     }
 
-    fn is_web_search(str: &str) -> bool {
-        str.starts_with("s:")
+    fn is_web_search(str: &str) -> (bool, WebSearchType) {
+        match str {
+            s if s.starts_with("!g") => (true, WebSearchType::Google),
+            s if s.starts_with("!y") => (true, WebSearchType::YouTube),
+            _ => (false, WebSearchType::Other(str.to_string())),
+        }
     }
 
     fn is_file(str: &str) -> bool {
-        str.starts_with("f:")
+        str.starts_with("!f")
     }
 }
 
@@ -40,7 +52,7 @@ impl FromStr for SeatchType {
         ) {
             (true, _, _, _) => Ok(SeatchType::Calculator),
             (_, true, _, _) => Ok(SeatchType::Web),
-            (_, _, true, _) => Ok(SeatchType::WebSearch),
+            (_, _, (true, t), _) => Ok(SeatchType::WebSearch(t, s.to_string())),
             (_, _, _, true) => Ok(SeatchType::File),
             _ => Ok(SeatchType::App),
         }
