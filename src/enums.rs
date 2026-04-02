@@ -4,23 +4,23 @@ use std::str::FromStr;
 pub enum SeatchType {
     App,
     File,
-    Calculator,
+    Calculator(Option<f64>),
     Web,
-    WebSearch(WebSearchType, String),
+    WebSearch(WebSearchType),
 }
 
 #[derive(Debug, Clone)]
 pub enum WebSearchType {
     Google,
     YouTube,
-    Other(String),
 }
 
 impl SeatchType {
-    fn is_calculator(_str: &str) -> bool {
-        //TODO: Implement a more robust calculator detection, maybe using regex to detect mathematical expressions
-
-        false
+    fn is_calculator(_str: &str) -> (bool, Option<f64>) {
+        match meval::eval_str(_str) {
+            Ok(res) => (true, Some(res)),
+            Err(_) => (false, None),
+        }
     }
 
     fn is_web(str: &str) -> bool {
@@ -31,7 +31,7 @@ impl SeatchType {
         match str {
             s if s.starts_with("!g") => (true, WebSearchType::Google),
             s if s.starts_with("!y") => (true, WebSearchType::YouTube),
-            _ => (false, WebSearchType::Other(str.to_string())),
+            _ => (false, WebSearchType::Google),
         }
     }
 
@@ -50,9 +50,9 @@ impl FromStr for SeatchType {
             Self::is_web_search(s),
             Self::is_file(s),
         ) {
-            (true, _, _, _) => Ok(SeatchType::Calculator),
+            ((true, res), _, _, _) => Ok(SeatchType::Calculator(res)),
             (_, true, _, _) => Ok(SeatchType::Web),
-            (_, _, (true, t), _) => Ok(SeatchType::WebSearch(t, s.to_string())),
+            (_, _, (true, t), _) => Ok(SeatchType::WebSearch(t)),
             (_, _, _, true) => Ok(SeatchType::File),
             _ => Ok(SeatchType::App),
         }

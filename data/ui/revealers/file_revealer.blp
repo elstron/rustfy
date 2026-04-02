@@ -1,0 +1,22 @@
+
+using Gtk 4.0;
+
+template $FileRevealer: Gtk.Box {
+  vexpand: true;
+  hexpand: true;
+  styles ["revealer-box"]
+
+  Gtk.Revealer revealer {
+    transition-type: slide_down;
+    transition-duration: 500;
+    reveal-child: false;
+
+    child: Gtk.Box content_box {
+      styles ["revealer-content"]
+      
+      orientation: vertical;
+      spacing: 6;
+      Gtk.Label { label: "File (TODO)"; halign: start; }
+    };
+  }
+}

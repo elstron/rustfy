@@ -35,6 +35,8 @@ window {
 
 .main-box {
   background-color: var(--background-color);
+  padding: 10px;
+  border-radius: 15px;
 }
 
 label {
@@ -50,12 +52,6 @@ label {
   padding: 10px;
   background-color: var(--background-color-secondary);
   border-radius: 50px;
-}
-
-box {
-  color: #ffffff;
-  border-radius: 10px;
-  margin: 5px;
 }
 
 .selected {
@@ -100,6 +96,17 @@ button:hover {
 }
 
 
-.scroll-box {
+.revealer-box {
+  margin:0;
+  padding:0;
+  background-color: transparent;
+  border: none;
+}
+
+.revealer-content {
+  background-color: var(--background-color-secondary);
+  padding: 5px;
+  margin: 10px;
+  border-radius: 10px;
   transition: opacity 0.3s ease;
 }

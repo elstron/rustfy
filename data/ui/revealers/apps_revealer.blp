@@ -1,0 +1,27 @@
+using Gtk 4.0;
+
+template $AppsRevealer: Gtk.Box {
+  vexpand: false;
+  hexpand: true;
+  styles ["revealer-box"]
+  
+  Gtk.Revealer revealer {
+    transition-type: slide_down;
+    transition-duration: 500;
+    reveal-child: false;
+
+    child: Gtk.ScrolledWindow {
+      hexpand: true;
+      vexpand: false;
+      min-content-width: 200;
+      min-content-height: 100;
+
+      child: Gtk.Box apps_box {
+
+        styles ["revealer-content"]
+        orientation: vertical;
+        spacing: 0;
+      };
+    };
+  }
+}

@@ -37,7 +37,6 @@ pub fn actualizar_workspaces(container: &Rc<RefCell<GtkBox>>) {
 
     let mut workspaces = obtener_workspaces();
 
-    // Ordena por id para orden visual
     workspaces.sort_by_key(|ws| ws.id);
 
     for ws in workspaces {
@@ -59,7 +58,7 @@ pub fn actualizar_workspaces(container: &Rc<RefCell<GtkBox>>) {
         }
 
         let gesture = GestureClick::new();
-        gesture.set_button(0); // acepta cualquier botón
+        gesture.set_button(0);
 
         let ws_name = ws.name.clone();
         gesture.connect_pressed(move |_, _, _, _| {

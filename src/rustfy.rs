@@ -35,7 +35,7 @@ impl Rustfy {
         let mut imp = Self {
             window,
             apps: list_applications.clone(),
-            vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
+            vbox: gtk::Box::new(gtk::Orientation::Vertical, 5),
             filtered_apps: Rc::new(RefCell::new(list_applications)),
         };
         imp.hide_window_listener(app);

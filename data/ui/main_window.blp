@@ -1,0 +1,38 @@
+using Gtk 4.0;
+
+template $RustfyMainWindow: Gtk.ApplicationWindow {
+  title: "Rustfy";
+  
+  child: Gtk.Box {
+    styles ["main-box"]
+
+    orientation: vertical;
+    width-request: 500;
+    margin-top: 12;
+    margin-bottom: 12;
+    margin-start: 12;
+    halign: center;
+    valign: center;
+
+    Gtk.Box entry_box {
+      styles ["entry-box"]  
+      orientation: horizontal;
+      spacing: 6;
+
+      Gtk.Entry search_entry {
+        placeholder-text: "Search...";
+        hexpand: true;
+      }
+
+      Gtk.Button search_button {
+        child: Gtk.Image entry_icon {
+          icon-name: "system-search-symbolic";
+        };
+      }
+    }
+    $AppsRevealer apps_revealer {}
+    $CalculatorRevealer calculator_revealer { reveal-child: false; }
+    $FileRevealer file_revealer { reveal-child: false; }
+    $WebRevealer web_search_revealer { reveal-child: false; }
+  };
+}
