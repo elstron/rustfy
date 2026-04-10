@@ -76,10 +76,9 @@ impl CalculatorRevealer {
             Some(res) => self
                 .imp()
                 .operation_result
-                .set_text(&format!("Result: {}", res)),
+                .set_text(res.to_string().as_str()),
             None => self.imp().operation_result.set_text("Invalid expression"),
         }
-        println!("calculator expression");
     }
 }
 

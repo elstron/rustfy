@@ -1,5 +1,14 @@
 use std::str::FromStr;
 
+use regex::Regex;
+
+#[derive(Debug, Clone)]
+pub struct AppInfo {
+    pub name: String,
+    pub exec: String,
+    pub icon: Option<String>,
+}
+
 #[derive(Debug, Clone)]
 pub enum SeatchType {
     App,
@@ -38,6 +47,16 @@ impl SeatchType {
     fn is_file(str: &str) -> bool {
         str.starts_with("!f")
     }
+
+    fn is_app(str: &str) -> bool {
+        let re = Regex::new(r"[^\p{L}\p{N}]").unwrap();
+
+        if re.is_match(str) {
+            return false;
+        }
+
+        true
+    }
 }
 
 impl FromStr for SeatchType {
@@ -49,12 +68,14 @@ impl FromStr for SeatchType {
             Self::is_web(s),
             Self::is_web_search(s),
             Self::is_file(s),
+            Self::is_app(s),
         ) {
-            ((true, res), _, _, _) => Ok(SeatchType::Calculator(res)),
-            (_, true, _, _) => Ok(SeatchType::Web),
-            (_, _, (true, t), _) => Ok(SeatchType::WebSearch(t)),
-            (_, _, _, true) => Ok(SeatchType::File),
-            _ => Ok(SeatchType::App),
+            ((true, res), _, _, _, _) => Ok(SeatchType::Calculator(res)),
+            (_, true, _, _, _) => Ok(SeatchType::Web),
+            (_, _, (true, t), _, _) => Ok(SeatchType::WebSearch(t)),
+            (_, _, _, true, _) => Ok(SeatchType::File),
+            (_, _, _, _, true) => Ok(SeatchType::App),
+            _ => Ok(SeatchType::WebSearch(WebSearchType::Google)),
         }
     }
 }

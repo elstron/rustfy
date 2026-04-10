@@ -1,50 +1,36 @@
-use gtk::prelude::ApplicationExt;
+use gtk::prelude::*;
 use std::{cell::RefCell, rc::Rc};
 
 use fuzzy_matcher::skim::SkimMatcherV2;
 use fuzzy_matcher::FuzzyMatcher;
 
-use gtk::{
-    prelude::{BoxExt, ButtonExt, WidgetExt},
-    Application,
-};
+use crate::enums::AppInfo;
+use crate::utils::applications::load_icon;
+use crate::utils::launch_app;
 
-use crate::{
-    utils::{
-        applications::{list_applications, load_icon},
-        launch_app,
-    },
-    AppInfo,
-};
-
-pub struct Rustfy {
-    pub window: gtk::ApplicationWindow,
-    pub apps: Vec<AppInfo>,
-    pub filtered_apps: Rc<RefCell<Vec<AppInfo>>>,
+pub struct AppsList {
+    window: gtk::ApplicationWindow,
     pub vbox: gtk::Box,
+    pub filtered_apps: Rc<RefCell<Vec<AppInfo>>>,
 }
 
-impl Rustfy {
-    pub fn new(app: &Application) -> Self {
-        let list_applications = list_applications();
-        let window = gtk::ApplicationWindow::builder()
-            .application(app)
-            .title("Panel de apps")
-            .build();
-
+impl AppsList {
+    pub fn new(
+        window: &gtk::ApplicationWindow,
+        vbox: &gtk::Box,
+        apps: Rc<RefCell<Vec<AppInfo>>>,
+    ) -> Self {
         let mut imp = Self {
-            window,
-            apps: list_applications.clone(),
-            vbox: gtk::Box::new(gtk::Orientation::Vertical, 5),
-            filtered_apps: Rc::new(RefCell::new(list_applications)),
+            window: window.clone(),
+            vbox: vbox.clone(),
+            filtered_apps: Rc::new(RefCell::new(apps.borrow().clone())),
         };
-        imp.hide_window_listener(app);
         imp.set_apps();
         imp
     }
 
     fn set_apps(&mut self) {
-        for app in self.apps.iter() {
+        for app in self.filtered_apps.borrow().iter() {
             let button = gtk::Button::new();
             let app_container = gtk::Box::new(gtk::Orientation::Horizontal, 3);
             button.set_widget_name(&app.name);
@@ -83,7 +69,8 @@ impl Rustfy {
     pub fn search(&mut self, query: &str) -> Vec<(AppInfo, i64)> {
         let matcher = SkimMatcherV2::default();
         let results = self
-            .apps
+            .filtered_apps
+            .borrow()
             .iter()
             .filter_map(|app| {
                 matcher
@@ -153,19 +140,11 @@ impl Rustfy {
             launch_app(&app.exec);
         }
     }
-
     fn set_envent_click(&self, widget: &gtk::Button, exec_cmd: String) {
         let window_clone = self.window.clone();
         widget.connect_clicked(move |_| {
             launch_app(&exec_cmd);
             window_clone.hide();
-        });
-    }
-
-    fn hide_window_listener(&self, app: &Application) {
-        let app = app.clone();
-        self.window.connect_hide(move |_| {
-            app.quit();
         });
     }
 }

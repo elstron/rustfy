@@ -3,36 +3,99 @@ using Gtk 4.0;
 template $RustfyMainWindow: Gtk.ApplicationWindow {
   title: "Rustfy";
   
-  child: Gtk.Box {
-    styles ["main-box"]
+  child: Gtk.Overlay {
+    
+    Gtk.Box background_box {
+      styles ["background-box"]
+      hexpand: true;
+      vexpand: true;
+    }
 
-    orientation: vertical;
-    width-request: 500;
-    margin-top: 12;
-    margin-bottom: 12;
-    margin-start: 12;
-    halign: center;
-    valign: center;
+    [overlay]
+    Gtk.Box main_box {
+      styles ["main-box"]
 
-    Gtk.Box entry_box {
-      styles ["entry-box"]  
-      orientation: horizontal;
       spacing: 6;
+      orientation: vertical;
+      width-request: 200;
+      margin-top: 12;
+      margin-bottom: 12;
+      margin-start: 12;
+      halign: center;
+      valign: center;
 
-      Gtk.Entry search_entry {
-        placeholder-text: "Search...";
-        hexpand: true;
+      Gtk.Box entry_box {
+        styles ["entry-box"]  
+        orientation: horizontal;
+        spacing: 6;
+
+        Gtk.Entry search_entry {
+          placeholder-text: "Search...";
+          hexpand: true;
+        }
+
+        Gtk.Button search_button {
+          styles ["entry-button"]
+          child: Gtk.Image entry_icon {
+            styles ["entry-icon"]
+            icon-name: "system-search-symbolic";
+          };
+        }
       }
+      $AppsRevealer apps_revealer {}
+      $CalculatorRevealer calculator_revealer { reveal-child: false; }
+      $FileRevealer file_revealer { reveal-child: false; }
+      $WebRevealer web_search_revealer { reveal-child: false; }
 
-      Gtk.Button search_button {
-        child: Gtk.Image entry_icon {
-          icon-name: "system-search-symbolic";
-        };
+      Gtk.Box footer_box {
+        styles ["footer-box"]
+        orientation: horizontal;
+        spacing: 6;
+        hexpand: true;
+        halign: fill;
+
+        Gtk.Box left_footer {
+          styles ["left-footer"]
+          halign: start;
+          hexpand: true;
+          spacing: 6;
+
+          Gtk.Button shutdown_button {
+            styles ["footer-button"]
+            child: Gtk.Image shutdown_icon {
+              icon-name: "application-exit-symbolic";
+            };
+          }
+
+          Gtk.Button restart_button {
+            styles ["footer-button"]
+            child: Gtk.Image restart_icon {
+              icon-name: "system-reboot-symbolic";
+            };
+          }
+        }
+        
+        Gtk.Box right_footer {
+          styles ["right-footer"]
+          hexpand: true;
+          halign: end;
+          spacing: 6;
+
+          Gtk.Button settings_button {
+            styles ["footer-button"]
+            child: Gtk.Image settings_icon {
+              icon-name: "emblem-system-symbolic";
+            };
+          }
+
+          Gtk.Button about_button {
+            styles ["footer-button"]
+            child: Gtk.Image about_icon {
+              icon-name: "help-about-symbolic";
+            };
+          }
+        }
       }
     }
-    $AppsRevealer apps_revealer {}
-    $CalculatorRevealer calculator_revealer { reveal-child: false; }
-    $FileRevealer file_revealer { reveal-child: false; }
-    $WebRevealer web_search_revealer { reveal-child: false; }
   };
 }

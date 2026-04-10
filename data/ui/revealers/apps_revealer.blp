@@ -13,14 +13,14 @@ template $AppsRevealer: Gtk.Box {
     child: Gtk.ScrolledWindow {
       hexpand: true;
       vexpand: false;
-      min-content-width: 200;
-      min-content-height: 100;
+      min-content-width: 500;
+      min-content-height: 200;
 
       child: Gtk.Box apps_box {
-
         styles ["revealer-content"]
+
+        spacing: 6;
         orientation: vertical;
-        spacing: 0;
       };
     };
   }

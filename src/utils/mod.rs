@@ -1,4 +1,4 @@
-//pub mod applications;
+pub mod applications;
 pub mod css;
 //pub mod web_browser;
 //pub mod workspaces;

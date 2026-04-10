@@ -1,8 +1,9 @@
+mod apps;
 mod config;
+mod enums;
+mod keyboard;
 mod resources;
 mod ui;
-
-mod enums;
 mod utils;
 use config::layer_shell_configure;
 use gtk::prelude::*;

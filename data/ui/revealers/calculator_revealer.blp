@@ -12,12 +12,14 @@ template $CalculatorRevealer: Gtk.Box {
     reveal-child: false;
 
     child: Gtk.Box content_box {
+      width-request: 200;
       styles ["revealer-content"]
       hexpand: true;
       vexpand: true;
       orientation: vertical;
       spacing: 6;
-      Gtk.Label operation_result { label: "Calculator (TODO)"; halign: start; }
+      Gtk.Label  { label: "Result"; halign: start; }
+      Gtk.Label operation_result { label: "Calculator (TODO)"; halign: end; styles ["calc-result"] }
     };
   }
 }

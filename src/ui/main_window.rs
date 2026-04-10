@@ -1,6 +1,6 @@
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
-use gtk::{glib, TemplateChild};
+use gtk::{TemplateChild, glib};
 
 use crate::enums::{SeatchType, WebSearchType};
 
@@ -14,11 +14,17 @@ const _FILE_ICON: &str = "folder-symbolic";
 const SEARCH_ICON: &str = "system-search-symbolic";
 
 mod imp {
+
     use super::*;
 
     #[derive(Default, gtk::CompositeTemplate)]
     #[template(resource = "/com/elstron/rustfy/main_window.ui")]
     pub struct MainWindow {
+        #[template_child]
+        pub main_box: TemplateChild<gtk::Box>,
+        #[template_child]
+        pub background_box: TemplateChild<gtk::Box>,
+
         #[template_child]
         pub search_entry: TemplateChild<gtk::Entry>,
         #[template_child]
@@ -32,6 +38,7 @@ mod imp {
         pub web_search_revealer: TemplateChild<WebRevealer>,
         #[template_child]
         pub file_revealer: TemplateChild<FileRevealer>,
+        //pub search_query: Rc<RefCell<String>>,
     }
 
     #[glib::object_subclass]
@@ -70,11 +77,13 @@ impl MainWindow {
         let obj: Self = glib::Object::builder().property("application", app).build();
 
         obj.setup();
+        obj.keyboard_listener();
         obj
     }
 
     fn setup(&self) {
         let imp = self.imp();
+        imp.apps_revealer.setup();
 
         imp.search_entry.connect_changed(glib::clone!(
             #[weak(rename_to = this)]
@@ -85,6 +94,21 @@ impl MainWindow {
             }
         ));
 
+        self.imp().apps_revealer.connect_local(
+            "window-closed",
+            false,
+            glib::clone!(
+                #[weak(rename_to = this)]
+                self,
+                #[upgrade_or]
+                None,
+                move |_| {
+                    this.close();
+                    None
+                }
+            ),
+        );
+
         let gesture = gtk::GestureClick::new();
         gesture.set_button(1);
 
@@ -92,26 +116,22 @@ impl MainWindow {
             #[weak(rename_to = this)]
             self,
             move |_, _, _, _| {
-                this.on_connect_pressed();
+                this.close();
             }
         ));
 
-        self.add_controller(gesture);
-    }
-
-    fn on_connect_pressed(&self) {
-        self.close();
+        self.imp().background_box.add_controller(gesture);
     }
 
     fn set_active_panel(&self, query: &str) {
-        let imp = self.imp();
         self.hide_panels();
+        if query.trim().is_empty() {
+            return;
+        };
+
+        let imp = self.imp();
 
         let search_type = query.parse::<SeatchType>().unwrap_or(SeatchType::App);
-
-        if query.is_empty() {
-            return;
-        }
 
         match search_type {
             SeatchType::Calculator(res) => {
@@ -123,6 +143,7 @@ impl MainWindow {
                 imp.entry_icon.set_icon_name(Some(WEB_ICON));
             }
             SeatchType::WebSearch(s) => {
+                //*imp.search_query.borrow_mut() = query.to_string();
                 imp.web_search_revealer.set_reveal_child(true);
                 match s {
                     WebSearchType::Google => {
@@ -135,7 +156,7 @@ impl MainWindow {
             }
             SeatchType::File => imp.file_revealer.set_reveal_child(true),
             SeatchType::App => {
-                imp.apps_revealer.set_reveal_child(true);
+                imp.apps_revealer.search_apps(query);
                 imp.entry_icon.set_icon_name(Some(SEARCH_ICON));
             }
         }
