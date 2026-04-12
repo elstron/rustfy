@@ -131,7 +131,7 @@ impl AppsRevealer {
             .iter()
             .filter_map(|app| {
                 matcher
-                    .fuzzy_match(&app.name, query)
+                    .fuzzy_match(&app.name.to_lowercase(), query.to_lowercase().as_str())
                     .map(|score| (app.clone(), score))
             })
             .collect::<Vec<_>>();

@@ -2,16 +2,7 @@ use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{TemplateChild, glib};
 
-use crate::enums::{SeatchType, WebSearchType};
-
 use super::revealers::{AppsRevealer, CalculatorRevealer, FileRevealer, WebRevealer};
-
-const CALCULATOR_ICON: &str = "accessories-calculator-symbolic";
-const WEB_ICON: &str = "insert-link-symbolic";
-const GOOGLE_ICON: &str = "help-browser-symbolic";
-const YOUTUBE_ICON: &str = "youtube-symbolic";
-const _FILE_ICON: &str = "folder-symbolic";
-const SEARCH_ICON: &str = "system-search-symbolic";
 
 mod imp {
 
@@ -24,6 +15,10 @@ mod imp {
         pub main_box: TemplateChild<gtk::Box>,
         #[template_child]
         pub background_box: TemplateChild<gtk::Box>,
+        #[template_child]
+        pub footer_box: TemplateChild<gtk::Box>,
+        #[template_child]
+        pub separator: TemplateChild<gtk::Separator>,
 
         #[template_child]
         pub search_entry: TemplateChild<gtk::Entry>,
@@ -121,53 +116,5 @@ impl MainWindow {
         ));
 
         self.imp().background_box.add_controller(gesture);
-    }
-
-    fn set_active_panel(&self, query: &str) {
-        self.hide_panels();
-        if query.trim().is_empty() {
-            return;
-        };
-
-        let imp = self.imp();
-
-        let search_type = query.parse::<SeatchType>().unwrap_or(SeatchType::App);
-
-        match search_type {
-            SeatchType::Calculator(res) => {
-                imp.calculator_revealer.show_result(res);
-                imp.entry_icon.set_icon_name(Some(CALCULATOR_ICON));
-            }
-            SeatchType::Web => {
-                imp.web_search_revealer.set_reveal_child(true);
-                imp.entry_icon.set_icon_name(Some(WEB_ICON));
-            }
-            SeatchType::WebSearch(s) => {
-                //*imp.search_query.borrow_mut() = query.to_string();
-                imp.web_search_revealer.set_reveal_child(true);
-                match s {
-                    WebSearchType::Google => {
-                        imp.entry_icon.set_icon_name(Some(GOOGLE_ICON));
-                    }
-                    WebSearchType::YouTube => {
-                        imp.entry_icon.set_icon_name(Some(YOUTUBE_ICON));
-                    }
-                }
-            }
-            SeatchType::File => imp.file_revealer.set_reveal_child(true),
-            SeatchType::App => {
-                imp.apps_revealer.search_apps(query);
-                imp.entry_icon.set_icon_name(Some(SEARCH_ICON));
-            }
-        }
-    }
-
-    fn hide_panels(&self) {
-        let imp = self.imp();
-
-        imp.apps_revealer.set_reveal_child(false);
-        imp.calculator_revealer.set_reveal_child(false);
-        imp.web_search_revealer.set_reveal_child(false);
-        imp.file_revealer.set_reveal_child(false);
     }
 }

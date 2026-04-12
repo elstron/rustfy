@@ -1,7 +1,7 @@
 use gtk::prelude::WidgetExt;
 use gtk4_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
 
-use crate::ui::main_window::MainWindow;
+use crate::ui::window::MainWindow;
 
 pub fn layer_shell_configure(window: &MainWindow) {
     LayerShell::init_layer_shell(window);

@@ -1,11 +1,11 @@
-use crate::ui::main_window::MainWindow;
+use crate::ui::window::MainWindow;
 use glib::subclass::types::ObjectSubclassIsExt;
 use gtk::prelude::*;
 impl MainWindow {
     pub fn keyboard_listener(&self) {
         let key_controller = gtk::EventControllerKey::new();
-
         key_controller.set_propagation_phase(gtk::PropagationPhase::Capture);
+
         key_controller.connect_key_pressed(glib::clone!(
             #[weak(rename_to = this)]
             self,

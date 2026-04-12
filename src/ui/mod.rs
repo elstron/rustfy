@@ -1,2 +1,2 @@
-pub mod main_window;
 pub mod revealers;
+pub mod window;

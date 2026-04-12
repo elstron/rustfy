@@ -16,11 +16,22 @@ template $AppsRevealer: Gtk.Box {
       min-content-width: 500;
       min-content-height: 200;
 
-      child: Gtk.Box apps_box {
+      child: Gtk.Box {
         styles ["revealer-content"]
 
-        spacing: 6;
+        spacing: 20;
         orientation: vertical;
+        
+        Gtk.Label {
+          halign: start;
+          styles ["revealer-title"]
+          label: "APPLICATIONS";
+        }
+
+        Gtk.Box apps_box {
+          spacing: 6;
+          orientation: vertical;
+        }
       };
     };
   }

@@ -1,11 +1,12 @@
-mod apps;
 mod config;
 mod enums;
 mod keyboard;
 mod resources;
+mod selector;
 mod ui;
 mod utils;
 use config::layer_shell_configure;
+use glib::subclass::types::ObjectSubclassIsExt;
 use gtk::prelude::*;
 
 use utils::css;
@@ -21,8 +22,9 @@ fn main() {
 
     app.connect_activate(|app| {
         css::load_css();
-        let window = ui::main_window::MainWindow::new(app);
+        let window = ui::window::MainWindow::new(app);
         layer_shell_configure(&window);
+        window.imp().search_entry.grab_focus();
         window.present();
     });
 

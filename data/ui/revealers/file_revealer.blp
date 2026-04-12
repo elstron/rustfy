@@ -4,6 +4,8 @@ using Gtk 4.0;
 template $FileRevealer: Gtk.Box {
   vexpand: true;
   hexpand: true;
+  valign: fill;
+
   styles ["revealer-box"]
 
   Gtk.Revealer revealer {
@@ -13,7 +15,8 @@ template $FileRevealer: Gtk.Box {
 
     child: Gtk.Box content_box {
       styles ["revealer-content"]
-      
+      vexpand: true;
+      hexpand: true;
       orientation: vertical;
       spacing: 6;
       Gtk.Label { label: "File (TODO)"; halign: start; }

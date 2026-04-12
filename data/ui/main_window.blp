@@ -4,6 +4,9 @@ template $RustfyMainWindow: Gtk.ApplicationWindow {
   title: "Rustfy";
   
   child: Gtk.Overlay {
+    margin-top: 12;
+    margin-bottom: 12;
+    margin-start: 12; 
     
     Gtk.Box background_box {
       styles ["background-box"]
@@ -14,34 +17,40 @@ template $RustfyMainWindow: Gtk.ApplicationWindow {
     [overlay]
     Gtk.Box main_box {
       styles ["main-box"]
-
-      spacing: 6;
       orientation: vertical;
-      width-request: 200;
-      margin-top: 12;
-      margin-bottom: 12;
-      margin-start: 12;
       halign: center;
       valign: center;
 
       Gtk.Box entry_box {
         styles ["entry-box"]  
         orientation: horizontal;
-        spacing: 6;
-
+        spacing: 10;
+        
+        Gtk.Button search_button {
+          styles ["entry-button"]
+          child: Gtk.Image entry_icon {
+            icon-name: "system-search-symbolic";
+          };
+        }
+        
         Gtk.Entry search_entry {
           placeholder-text: "Search...";
           hexpand: true;
         }
 
-        Gtk.Button search_button {
-          styles ["entry-button"]
-          child: Gtk.Image entry_icon {
-            styles ["entry-icon"]
-            icon-name: "system-search-symbolic";
+        Gtk.Button exit_button {
+          child: Gtk.Label {
+            label: "ESC";
           };
         }
+        
       }
+
+      Gtk.Separator separator {
+        styles ["separator"]
+        visible: false;
+      }
+
       $AppsRevealer apps_revealer {}
       $CalculatorRevealer calculator_revealer { reveal-child: false; }
       $FileRevealer file_revealer { reveal-child: false; }
@@ -50,28 +59,52 @@ template $RustfyMainWindow: Gtk.ApplicationWindow {
       Gtk.Box footer_box {
         styles ["footer-box"]
         orientation: horizontal;
-        spacing: 6;
         hexpand: true;
         halign: fill;
-
+        visible: false;
+        margin-start: 10;
+        margin-top: 10;
+        
         Gtk.Box left_footer {
           styles ["left-footer"]
+
           halign: start;
           hexpand: true;
           spacing: 6;
 
-          Gtk.Button shutdown_button {
-            styles ["footer-button"]
-            child: Gtk.Image shutdown_icon {
-              icon-name: "application-exit-symbolic";
+          Gtk.Button  {
+            styles ["keyboard-icon"]
+            child: Gtk.Label {
+              label: ""; 
             };
           }
 
-          Gtk.Button restart_button {
-            styles ["footer-button"]
-            child: Gtk.Image restart_icon {
-              icon-name: "system-reboot-symbolic";
+          Gtk.Button  {
+            margin-start: 2;
+            styles ["keyboard-icon"]
+            child: Gtk.Label {
+              label: "";
             };
+          }
+
+          Gtk.Label {
+            styles ["footer-label"]
+            margin-start: 4;
+            label: "NAVIGATE";
+          }
+
+          Gtk.Button  {
+            margin-start: 10;
+            styles ["keyboard-icon"]
+            child: Gtk.Label {
+              label: "󰘌";
+            };
+          }
+
+          Gtk.Label {
+            styles ["footer-label"]
+            margin-start: 4;
+            label: "SELECT";
           }
         }
         
@@ -80,20 +113,6 @@ template $RustfyMainWindow: Gtk.ApplicationWindow {
           hexpand: true;
           halign: end;
           spacing: 6;
-
-          Gtk.Button settings_button {
-            styles ["footer-button"]
-            child: Gtk.Image settings_icon {
-              icon-name: "emblem-system-symbolic";
-            };
-          }
-
-          Gtk.Button about_button {
-            styles ["footer-button"]
-            child: Gtk.Image about_icon {
-              icon-name: "help-about-symbolic";
-            };
-          }
         }
       }
     }
