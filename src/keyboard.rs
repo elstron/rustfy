@@ -18,7 +18,10 @@ impl MainWindow {
                         this.close();
                         glib::signal::Propagation::Stop
                     }
-                    Key::Return => glib::signal::Propagation::Stop,
+                    Key::Return => {
+                        this.imp().apps_revealer.launch_selected(None);
+                        glib::signal::Propagation::Stop
+                    }
                     _ => glib::signal::Propagation::Proceed,
                 }
             }

@@ -5,6 +5,7 @@ use regex::Regex;
 #[derive(Debug, Clone, Default)]
 pub struct AppInfo {
     pub name: String,
+    pub generic_name: Option<String>,
     pub exec: String,
     pub icon: Option<String>,
 }
@@ -16,6 +17,7 @@ pub enum SeatchType {
     Calculator(Option<f64>),
     Web,
     WebSearch(WebSearchType),
+    #[allow(dead_code)]
     ShellCommand,
 }
 

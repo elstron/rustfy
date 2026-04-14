@@ -73,7 +73,7 @@ popover {
 button {
   padding: 10px 20px;
   background-color: var(--background-color-tertiary);
-  color: #ffffff !important;
+  color: #ffffff;
   border: none;
   border-radius: 9px;
 }

@@ -51,15 +51,22 @@ pub fn list_applications() -> Vec<AppInfo> {
 
 fn parse_desktop_file(content: &str) -> Option<AppInfo> {
     let mut name = None;
+    let mut generic_name = None;
     let mut exec = None;
     let mut icon = None;
 
     for line in content.lines() {
         if name.is_none()
             && let Some(stripped) = line.strip_prefix("Name=")
-            && !stripped.contains("URL Handler")
+            && !stripped.contains("URL")
         {
             name = Some(stripped.to_string());
+        }
+
+        if generic_name.is_none()
+            && let Some(stripped) = line.strip_prefix("GenericName=")
+        {
+            generic_name = Some(stripped.to_string());
         }
 
         if exec.is_none()
@@ -85,6 +92,7 @@ fn parse_desktop_file(content: &str) -> Option<AppInfo> {
 
     Some(AppInfo {
         name: name?,
+        generic_name,
         exec: exec?,
         icon,
     })

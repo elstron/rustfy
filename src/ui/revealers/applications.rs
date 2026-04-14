@@ -131,10 +131,7 @@ impl AppsRevealer {
                     .model()
                     .and_then(|m| m.item(position))
                     .and_then(|i| i.downcast::<AppInfoObject>().ok());
-                if let Some(app_info) = item {
-                    launch_app(&app_info.data().exec);
-                    this.emit_by_name::<()>("window-closed", &[&app_info.data().name]);
-                }
+                this.launch_selected(Some(item.unwrap()));
             }
         ));
 
@@ -245,8 +242,30 @@ impl AppsRevealer {
                         query_clone.to_lowercase().as_str(),
                     )
                     .is_some()
+                    || matcher
+                        .fuzzy_match(
+                            &app.generic_name.clone().unwrap_or_default().to_lowercase(),
+                            query_clone.to_lowercase().as_str(),
+                        )
+                        .is_some()
             }
         ));
+    }
+
+    pub fn launch_selected(&self, app: Option<AppInfoObject>) {
+        match app {
+            Some(app) => launch_app(&app.data().exec),
+            None => match self.imp().selection_model.selected_item() {
+                Some(item) => {
+                    let app = item
+                        .downcast_ref::<AppInfoObject>()
+                        .expect("Selected item is not an AppInfoObject");
+                    launch_app(&app.data().exec);
+                }
+                None => return,
+            },
+        }
+        self.emit_by_name::<()>("window-closed", &[&"".to_string()]);
     }
 }
 
