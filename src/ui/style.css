@@ -87,7 +87,15 @@ button:hover {
   border: 0px solid #ffffff;
   border-radius: 9px;
 }
+.selected, .focus {
+  background-color: rgba(26, 29, 64, 0.7);
+}
 
+.app-button:hover {
+  background-color: var(--background-color-tertiary);
+  border: 0px solid #ffffff;
+  border-radius: 9px;
+}
 .app-button {
   background-color: transparent;
   color: #ffffff;
@@ -142,4 +150,6 @@ button:hover {
   font-size: 40px;
 }
 
-
+listview row:selected:focus {
+  background-color: var(--background-color-tertiary);
+}

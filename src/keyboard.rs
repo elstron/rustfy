@@ -14,10 +14,6 @@ impl MainWindow {
             move |_, keyval, _, _| {
                 use gtk::gdk::Key;
                 match keyval {
-                    Key::Up => {
-                        println!("Up key pressed");
-                        glib::signal::Propagation::Stop
-                    }
                     Key::Escape => {
                         this.close();
                         glib::signal::Propagation::Stop

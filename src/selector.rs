@@ -16,6 +16,7 @@ const SEARCH_ICON: &str = "system-search-symbolic";
 impl MainWindow {
     pub fn set_active_panel(&self, query: &str) {
         self.hide_panels();
+        *self.imp().search_query.borrow_mut() = query.to_string();
 
         let imp = self.imp();
 
@@ -28,7 +29,7 @@ impl MainWindow {
 
         if !imp.footer_box.is_visible() {
             imp.main_box.set_spacing(10);
-            //imp.separator.set_visible(true);
+            imp.separator.set_visible(true);
             imp.footer_box.set_visible(true);
         }
 
@@ -40,10 +41,12 @@ impl MainWindow {
                 imp.entry_icon.set_icon_name(Some(CALCULATOR_ICON));
             }
             SeatchType::Web => {
+                //TODO:: Work in progress
                 imp.web_search_revealer.set_reveal_child(true);
                 imp.entry_icon.set_icon_name(Some(WEB_ICON));
             }
             SeatchType::WebSearch(s) => {
+                //TODO:: Work in progress
                 //*imp.search_query.borrow_mut() = query.to_string();
                 imp.web_search_revealer.set_reveal_child(true);
                 match s {
@@ -55,12 +58,18 @@ impl MainWindow {
                     }
                 }
             }
-            SeatchType::File => imp.file_revealer.set_reveal_child(true),
+            SeatchType::File => {
+                //TODO:: Work in progress
+                imp.file_revealer.set_reveal_child(true);
+            }
             SeatchType::App => {
                 imp.apps_revealer.search_apps(query);
                 imp.entry_icon.set_icon_name(Some(SEARCH_ICON));
             }
-        }
+            SeatchType::ShellCommand => {
+                //TODO:: Work in progress
+            }
+        };
     }
 
     fn hide_panels(&self) {

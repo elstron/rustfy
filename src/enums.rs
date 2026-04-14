@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use regex::Regex;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AppInfo {
     pub name: String,
     pub exec: String,
@@ -16,6 +16,7 @@ pub enum SeatchType {
     Calculator(Option<f64>),
     Web,
     WebSearch(WebSearchType),
+    ShellCommand,
 }
 
 #[derive(Debug, Clone)]

@@ -1,12 +1,11 @@
 using Gtk 4.0;
 
-template $AppsRevealer: Gtk.Box {
+template $Preferences: Gtk.Box {
   vexpand: false;
   hexpand: true;
   styles ["revealer-box"]
   
   Gtk.Revealer revealer {
-    vexpand: false;
     transition-type: swing_down;
     transition-duration: 500;
     reveal-child: false;

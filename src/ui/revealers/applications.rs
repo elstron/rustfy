@@ -1,27 +1,36 @@
 use crate::enums::AppInfo;
 use crate::utils::applications::{list_applications, load_icon};
+use crate::wrappers::app_info::AppInfoObject;
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 use glib::Properties;
 use glib::subclass::Signal;
 use glib::types::StaticType;
-use gtk::glib;
 use gtk::prelude::WidgetExt;
 use gtk::subclass::prelude::*;
-use gtk::{Box, Revealer};
+use gtk::{Box, FilterListModel, ListView, Revealer};
+use gtk::{SignalListItemFactory, glib};
 use std::{cell::RefCell, rc::Rc};
 
 use crate::utils::launch_app;
 use gtk::prelude::*;
 use once_cell::sync::Lazy;
 
-static WINDOW_CLOSED_SIGNAL: Lazy<Signal> = Lazy::new(|| {
-    Signal::builder("window-closed")
-        .param_types([String::static_type()])
-        .return_type::<()>()
-        .build()
+static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
+    vec![
+        Signal::builder("window-closed")
+            .param_types([String::static_type()])
+            .build(),
+        // Aquí registras tu segunda señal
+        Signal::builder("restore-focus")
+            .param_types([String::static_type()])
+            .build(),
+    ]
 });
+
 mod imp {
+
+    use gtk::CustomFilter;
 
     use crate::enums::AppInfo;
 
@@ -38,6 +47,9 @@ mod imp {
 
         pub apps_list: Rc<RefCell<Vec<AppInfo>>>,
         pub filtered_apps: Rc<RefCell<Vec<AppInfo>>>,
+        pub filter: CustomFilter,
+        pub selection_model: gtk::SingleSelection,
+        pub focused: i32,
         //pub main_window: Weak<MainWindow>,
     }
 
@@ -63,7 +75,7 @@ mod imp {
         }
 
         fn signals() -> &'static [Signal] {
-            std::slice::from_ref(&*WINDOW_CLOSED_SIGNAL)
+            SIGNALS.as_slice()
         }
     }
 
@@ -91,6 +103,8 @@ impl AppsRevealer {
             futures::executor::block_on(sender.send(apps)).unwrap();
         });
 
+        let (filter_model, list_store) = self.model();
+        let model_clone = list_store.clone();
         let apps = Rc::clone(&self.imp().apps_list);
         context.spawn_local(glib::clone!(
             #[weak(rename_to = this)]
@@ -98,9 +112,54 @@ impl AppsRevealer {
             async move {
                 let message = receiver.recv().await.unwrap();
                 *apps.borrow_mut() = message;
-                this.set_apps();
+
+                for item in this.imp().apps_list.borrow().iter() {
+                    model_clone.append(&AppInfoObject::new(item.clone()));
+                }
             }
         ));
+
+        let factory = self.factory();
+        self.imp().selection_model.set_model(Some(&filter_model));
+        let list_view = ListView::new(Some(self.imp().selection_model.clone()), Some(factory));
+
+        list_view.connect_activate(glib::clone!(
+            #[weak(rename_to = this)]
+            self,
+            move |list, position| {
+                let item = list
+                    .model()
+                    .and_then(|m| m.item(position))
+                    .and_then(|i| i.downcast::<AppInfoObject>().ok());
+                if let Some(app_info) = item {
+                    launch_app(&app_info.data().exec);
+                    this.emit_by_name::<()>("window-closed", &[&app_info.data().name]);
+                }
+            }
+        ));
+
+        let key_controller = gtk::EventControllerKey::new();
+        key_controller.connect_key_pressed(glib::clone!(
+            #[weak(rename_to = this)]
+            self,
+            #[upgrade_or]
+            glib::signal::Propagation::Stop,
+            move |_, keyval, _, _| {
+                use gtk::gdk::Key;
+
+                if let Some(c) = keyval.to_unicode()
+                    && !matches!(keyval, Key::Up | Key::Down | Key::Return)
+                {
+                    this.emit_by_name::<()>("restore-focus", &[&c.to_string()]);
+
+                    return gtk::glib::Propagation::Stop;
+                }
+
+                gtk::glib::Propagation::Proceed
+            }
+        ));
+        list_view.add_controller(key_controller);
+        self.imp().apps_box.append(&list_view);
     }
 
     pub fn set_reveal_child(&self, reveal: bool) {
@@ -108,122 +167,86 @@ impl AppsRevealer {
     }
 
     pub fn search_apps(&self, query: &str) {
-        self.hide_all_apps();
-        let filtered_apps = self.filter_apps(query);
-
-        match self.search_widget(0) {
-            Some(widget) => widget.add_css_class("selected"),
-            None => println!("No se encontró ningún widget para el índice 0"),
-        }
-
-        for app in filtered_apps.iter() {
-            self.show_widget(&app.0.name);
-        }
+        self.update_filter(query);
+        self.imp().filter.changed(gtk::FilterChange::Different);
         self.set_reveal_child(true);
     }
 
-    pub fn filter_apps(&self, query: &str) -> Vec<(AppInfo, i64)> {
-        let imp = self.imp();
-        let matcher = SkimMatcherV2::default();
-        let results = imp
-            .apps_list
-            .borrow()
-            .iter()
-            .filter_map(|app| {
-                matcher
-                    .fuzzy_match(&app.name.to_lowercase(), query.to_lowercase().as_str())
-                    .map(|score| (app.clone(), score))
-            })
-            .collect::<Vec<_>>();
-
-        imp.filtered_apps
-            .replace(results.iter().map(|(app, _)| app.clone()).collect());
-        results
-    }
-
-    fn set_apps(&self) {
-        for app in self.imp().apps_list.borrow().iter() {
-            let button = gtk::Button::new();
-            let app_container = gtk::Box::new(gtk::Orientation::Horizontal, 3);
-            button.set_widget_name(&app.name);
-            match app.icon.as_ref() {
-                Some(icon) => {
-                    let image = load_icon(icon, 24);
-                    app_container.append(&image);
-                }
-                None => {
-                    let placeholder = gtk::Image::from_icon_name("application-x-executable");
-                    app_container.append(&placeholder);
-                }
+    pub fn set_widget(&self, vbox: &gtk::Box, app: &AppInfo) {
+        vbox.set_widget_name(&app.name);
+        match app.icon.as_ref() {
+            Some(icon) => {
+                let image = load_icon(icon, 24);
+                vbox.append(&image);
             }
-            app_container.append(&gtk::Label::new(Some(&app.name)));
-            button.set_child(Some(&app_container));
-            button.add_css_class("app-button");
-            self.set_envent_click(&button, app.exec.clone());
-            self.imp().apps_box.append(&button);
-        }
-    }
-    pub fn search_widget(&self, index: i32) -> Option<gtk::Widget> {
-        let current_apps = self.imp().filtered_apps.borrow();
-
-        let app_name = match current_apps.get(index as usize) {
-            Some(app) => &app.name,
-            None => return None,
-        };
-
-        let box_ = self.imp().apps_box.clone();
-        let mut child = box_.first_child();
-        while let Some(c) = child {
-            child = c.next_sibling();
-            if c.widget_name() == app_name.as_str() {
-                return Some(c);
+            None => {
+                let placeholder = gtk::Image::from_icon_name("application-x-executable");
+                vbox.append(&placeholder);
             }
-            continue;
         }
-        None
+        vbox.append(&gtk::Label::new(Some(&app.name)));
+        vbox.add_css_class("app-button");
     }
 
-    pub fn hide_all_apps(&self) {
-        let box_ = self.imp().apps_box.clone();
-        let mut child = box_.first_child();
-        while let Some(c) = child {
-            child = c.next_sibling();
-            c.remove_css_class("selected");
-            c.hide();
-        }
-    }
+    pub fn factory(&self) -> SignalListItemFactory {
+        let factory = SignalListItemFactory::new();
 
-    pub fn deselect_all_widgets(&self) {
-        let box_ = self.imp().apps_box.clone();
-        let mut child = box_.first_child();
-        while let Some(c) = child {
-            child = c.next_sibling();
-            c.remove_css_class("selected");
-        }
-    }
+        factory.connect_setup(move |_, list_item| {
+            let _box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
+            list_item.set_child(Some(&_box));
+        });
 
-    fn set_envent_click(&self, widget: &gtk::Button, exec_cmd: String) {
-        widget.connect_clicked(glib::clone!(
+        factory.connect_bind(glib::clone!(
             #[weak(rename_to = this)]
             self,
-            move |_| {
-                launch_app(&exec_cmd);
-                this.emit_by_name::<()>("window-closed", &[&exec_cmd]);
+            move |_, list_item| {
+                let item_obj = list_item
+                    .item()
+                    .unwrap()
+                    .downcast::<AppInfoObject>()
+                    .unwrap();
+                let widget = list_item
+                    .child()
+                    .unwrap()
+                    .downcast::<gtk::Box>()
+                    .expect("El widget del ListItem no es un Label");
+                let app = item_obj.data();
+
+                this.set_widget(&widget, &app);
             }
         ));
+        factory
     }
 
-    pub fn show_widget(&self, name: &str) {
-        let box_ = self.imp().apps_box.clone();
-        let mut child = box_.first_child();
-        while let Some(c) = child {
-            child = c.next_sibling();
-            if c.widget_name() == name {
-                c.show();
-                break;
+    pub fn model(&self) -> (FilterListModel, gtk::gio::ListStore) {
+        let model = gtk::gio::ListStore::new::<AppInfoObject>();
+        (
+            FilterListModel::new(Some(model.clone()), Some(self.imp().filter.clone())),
+            model,
+        )
+    }
+
+    pub fn update_filter(&self, query: &str) {
+        let query_clone = query.to_string();
+        self.imp().filter.set_filter_func(glib::clone!(
+            #[weak(rename_to = _this)]
+            self,
+            #[upgrade_or]
+            false,
+            move |item| {
+                let item_obj = item
+                    .downcast_ref::<AppInfoObject>()
+                    .expect("El item no es un AppInfoObject");
+                let app = item_obj.data();
+                let matcher = SkimMatcherV2::default();
+                matcher
+                    .fuzzy_match(
+                        &app.name.to_lowercase(),
+                        query_clone.to_lowercase().as_str(),
+                    )
+                    .is_some()
             }
-            continue;
-        }
+        ));
     }
 }
 

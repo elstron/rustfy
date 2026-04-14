@@ -1,10 +1,9 @@
 use gtk::gio;
 
 const RESOURCE_PATHS: &[&str] = &[
-    "builddir/data/rustfy.gresource",           // Development with meson
-    "data/rustfy.gresource",                    // Development fallback
-    "/usr/local/share/rustfy/rustfy.gresource", // Local installation
-    "/usr/share/rustfy/rustfy.gresource",       // System installation
+    "builddir/data/rustfy.gresource",
+    "/usr/local/share/rustfy/rustfy.gresource",
+    "/usr/share/rustfy/rustfy.gresource",
 ];
 
 fn find_resource_path() -> Option<String> {

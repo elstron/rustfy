@@ -51,10 +51,15 @@ template $RustfyMainWindow: Gtk.ApplicationWindow {
         visible: false;
       }
 
-      $AppsRevealer apps_revealer {}
-      $CalculatorRevealer calculator_revealer { reveal-child: false; }
-      $FileRevealer file_revealer { reveal-child: false; }
-      $WebRevealer web_search_revealer { reveal-child: false; }
+      Gtk.Box {
+        styles ["revealers-box"]
+        orientation: vertical;
+
+        $AppsRevealer apps_revealer {}
+        $CalculatorRevealer calculator_revealer { reveal-child: false; }
+        $FileRevealer file_revealer { reveal-child: false; }
+        $WebRevealer web_search_revealer { reveal-child: false; }
+      }
 
       Gtk.Box footer_box {
         styles ["footer-box"]

@@ -2,13 +2,14 @@
 using Gtk 4.0;
 
 template $FileRevealer: Gtk.Box {
-  vexpand: true;
+  vexpand: false;
   hexpand: true;
   valign: fill;
 
   styles ["revealer-box"]
 
   Gtk.Revealer revealer {
+    vexpand: false;
     transition-type: slide_down;
     transition-duration: 500;
     reveal-child: false;

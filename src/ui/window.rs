@@ -6,6 +6,8 @@ use super::revealers::{AppsRevealer, CalculatorRevealer, FileRevealer, WebReveal
 
 mod imp {
 
+    use std::{cell::RefCell, rc::Rc};
+
     use super::*;
 
     #[derive(Default, gtk::CompositeTemplate)]
@@ -33,7 +35,8 @@ mod imp {
         pub web_search_revealer: TemplateChild<WebRevealer>,
         #[template_child]
         pub file_revealer: TemplateChild<FileRevealer>,
-        //pub search_query: Rc<RefCell<String>>,
+
+        pub search_query: Rc<RefCell<String>>,
     }
 
     #[glib::object_subclass]
@@ -99,6 +102,29 @@ impl MainWindow {
                 None,
                 move |_| {
                     this.close();
+                    None
+                }
+            ),
+        );
+
+        self.imp().apps_revealer.connect_local(
+            "restore-focus",
+            false,
+            glib::clone!(
+                #[weak(rename_to = this)]
+                self,
+                #[upgrade_or]
+                None,
+                move |values| {
+                    let message = values[1].get::<String>().unwrap();
+
+                    this.imp().search_entry.grab_focus();
+                    this.imp().search_entry.set_text(
+                        format!("{}{}", *this.imp().search_query.borrow(), message).as_str(),
+                    );
+                    this.imp()
+                        .search_entry
+                        .set_position(this.imp().search_entry.text_length() as i32);
                     None
                 }
             ),
