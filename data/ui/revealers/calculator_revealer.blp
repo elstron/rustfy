@@ -1,0 +1,28 @@
+using Gtk 4.0;
+
+template $CalculatorRevealer: Gtk.Box {
+  vexpand: false;
+  hexpand: true;
+
+  styles ["revealer-box"]
+  
+  Gtk.Revealer revealer {
+    vexpand: false;
+    transition-type: slide_down;
+    transition-duration: 500;
+    reveal-child: false;
+
+    child: Gtk.Box content_box {
+      width-request: 200;
+      styles ["revealer-content"]
+      hexpand: true;
+      vexpand: true;
+      orientation: vertical;
+      spacing: 6;
+      Gtk.Label  { label: "Result"; halign: start; }
+      Gtk.Label operation_result { label: "Calculator (TODO)"; halign: end; styles ["calc-result"] }
+    };
+  }
+}
+
+

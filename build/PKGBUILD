@@ -1,6 +1,6 @@
 # Maintainer: stron <contact@stron.me>
 pkgname=rustfy
-pkgver=0.0.06
+pkgver=0.0.09
 pkgrel=1
 pkgdesc="App launcher and menu for Wayland compositors"
 arch=("x86_64")
@@ -8,13 +8,22 @@ url="https://github.com/elstron/hybar"
 license=("Apache-2.0")
 
 depends=()
-makedepends=("rust" "cargo")
-
-source=()
-sha256sums=()
+makedepends=(
+  "rust"
+  "cargo"
+  "glib2"
+  "meson"
+  "ninja"
+  "blueprint-compiler"
+)
 
 build() {
   cd "$startdir/.."
+
+  # Build UI (.ui) from Blueprints and bundle resources via Meson
+  meson setup --reconfigure --buildtype=release "$srcdir/builddir" .
+  meson compile -C "$srcdir/builddir"
+
   cargo build --release
 }
 
@@ -22,4 +31,6 @@ package() {
   cd "$startdir/.."
   install -Dm755 target/release/rustfy \
     "$pkgdir/usr/bin/rustfy"
+  install -Dm644 "$srcdir/builddir/data/rustfy.gresource" \
+    "$pkgdir/usr/share/rustfy/rustfy.gresource"
 }

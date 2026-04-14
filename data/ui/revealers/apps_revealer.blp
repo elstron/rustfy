@@ -1,0 +1,39 @@
+using Gtk 4.0;
+
+template $AppsRevealer: Gtk.Box {
+  vexpand: false;
+  hexpand: true;
+  styles ["revealer-box"]
+  
+  Gtk.Revealer revealer {
+    vexpand: false;
+    transition-type: swing_down;
+    transition-duration: 500;
+    reveal-child: false;
+
+    child: Gtk.ScrolledWindow {
+      hexpand: true;
+      vexpand: false;
+      min-content-width: 500;
+      min-content-height: 200;
+
+      child: Gtk.Box {
+        styles ["revealer-content"]
+
+        spacing: 20;
+        orientation: vertical;
+        
+        Gtk.Label {
+          halign: start;
+          styles ["revealer-title"]
+          label: "APPLICATIONS";
+        }
+
+        Gtk.Box apps_box {
+          spacing: 6;
+          orientation: vertical;
+        }
+      };
+    };
+  }
+}

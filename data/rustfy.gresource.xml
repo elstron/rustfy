@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/com/elstron/rustfy/">
+    <file alias="main_window.ui" preprocess="xml-stripblanks">ui/main_window.ui</file>
+    <file alias="revealers/apps_revealer.ui" compressed="true" preprocess="xml-stripblanks">ui/revealers/apps_revealer.ui</file>
+    <file alias="revealers/calculator_revealer.ui" compressed="true" preprocess="xml-stripblanks">ui/revealers/calculator_revealer.ui</file>
+    <file alias="revealers/file_revealer.ui" compressed="true" preprocess="xml-stripblanks">ui/revealers/file_revealer.ui</file>
+    <file alias="revealers/web_search_revealer.ui" compressed="true" preprocess="xml-stripblanks">ui/revealers/web_search_revealer.ui</file>
+  </gresource>
+</gresources>

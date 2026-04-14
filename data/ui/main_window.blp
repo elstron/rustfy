@@ -1,0 +1,125 @@
+using Gtk 4.0;
+
+template $RustfyMainWindow: Gtk.ApplicationWindow {
+  title: "Rustfy";
+  
+  child: Gtk.Overlay {
+    margin-top: 12;
+    margin-bottom: 12;
+    margin-start: 12; 
+    
+    Gtk.Box background_box {
+      styles ["background-box"]
+      hexpand: true;
+      vexpand: true;
+    }
+
+    [overlay]
+    Gtk.Box main_box {
+      styles ["main-box"]
+      orientation: vertical;
+      halign: center;
+      valign: center;
+
+      Gtk.Box entry_box {
+        styles ["entry-box"]  
+        orientation: horizontal;
+        spacing: 10;
+        
+        Gtk.Button search_button {
+          styles ["entry-button"]
+          child: Gtk.Image entry_icon {
+            icon-name: "system-search-symbolic";
+          };
+        }
+        
+        Gtk.Entry search_entry {
+          placeholder-text: "Search...";
+          hexpand: true;
+        }
+
+        Gtk.Button exit_button {
+          child: Gtk.Label {
+            label: "ESC";
+          };
+        }
+        
+      }
+
+      Gtk.Separator separator {
+        styles ["separator"]
+        visible: false;
+      }
+
+      Gtk.Box {
+        styles ["revealers-box"]
+        orientation: vertical;
+
+        $AppsRevealer apps_revealer {}
+        $CalculatorRevealer calculator_revealer { reveal-child: false; }
+        $FileRevealer file_revealer { reveal-child: false; }
+        $WebRevealer web_search_revealer { reveal-child: false; }
+      }
+
+      Gtk.Box footer_box {
+        styles ["footer-box"]
+        orientation: horizontal;
+        hexpand: true;
+        halign: fill;
+        visible: false;
+        margin-start: 10;
+        margin-top: 10;
+        
+        Gtk.Box left_footer {
+          styles ["left-footer"]
+
+          halign: start;
+          hexpand: true;
+          spacing: 6;
+
+          Gtk.Button  {
+            styles ["keyboard-icon"]
+            child: Gtk.Label {
+              label: ""; 
+            };
+          }
+
+          Gtk.Button  {
+            margin-start: 2;
+            styles ["keyboard-icon"]
+            child: Gtk.Label {
+              label: "";
+            };
+          }
+
+          Gtk.Label {
+            styles ["footer-label"]
+            margin-start: 4;
+            label: "NAVIGATE";
+          }
+
+          Gtk.Button  {
+            margin-start: 10;
+            styles ["keyboard-icon"]
+            child: Gtk.Label {
+              label: "󰘌";
+            };
+          }
+
+          Gtk.Label {
+            styles ["footer-label"]
+            margin-start: 4;
+            label: "SELECT";
+          }
+        }
+        
+        Gtk.Box right_footer {
+          styles ["right-footer"]
+          hexpand: true;
+          halign: end;
+          spacing: 6;
+        }
+      }
+    }
+  };
+}
