@@ -8,3 +8,4 @@ build/pkg/
 *.tar.gz
 *.tgz
 *.tar.zst
+data/rustfy.gresource
