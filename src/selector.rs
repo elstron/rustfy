@@ -40,7 +40,7 @@ impl MainWindow {
                 imp.calculator_revealer.show_result(res);
                 imp.entry_icon.set_icon_name(Some(CALCULATOR_ICON));
             }
-            SeatchType::Web => {
+            SeatchType::Web(_) => {
                 //TODO:: Work in progress
                 imp.web_search_revealer.set_reveal_child(true);
                 imp.entry_icon.set_icon_name(Some(WEB_ICON));
@@ -50,10 +50,10 @@ impl MainWindow {
                 //*imp.search_query.borrow_mut() = query.to_string();
                 imp.web_search_revealer.set_reveal_child(true);
                 match s {
-                    WebSearchType::Google => {
+                    WebSearchType::Google(_) => {
                         imp.entry_icon.set_icon_name(Some(GOOGLE_ICON));
                     }
-                    WebSearchType::YouTube => {
+                    WebSearchType::YouTube(_) => {
                         imp.entry_icon.set_icon_name(Some(YOUTUBE_ICON));
                     }
                 }
@@ -66,7 +66,7 @@ impl MainWindow {
                 imp.apps_revealer.search_apps(query);
                 imp.entry_icon.set_icon_name(Some(SEARCH_ICON));
             }
-            SeatchType::ShellCommand => {
+            SeatchType::ShellCommand(_) => {
                 //TODO:: Work in progress
             }
         };

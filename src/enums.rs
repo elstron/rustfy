@@ -1,7 +1,5 @@
-use std::str::FromStr;
-
 use regex::Regex;
-
+use std::str::FromStr;
 #[derive(Debug, Clone, Default)]
 pub struct AppInfo {
     pub name: String,
@@ -15,50 +13,37 @@ pub enum SeatchType {
     App,
     File,
     Calculator(Option<f64>),
-    Web,
+    Web(String),
     WebSearch(WebSearchType),
     #[allow(dead_code)]
-    ShellCommand,
+    ShellCommand(String),
 }
 
 #[derive(Debug, Clone)]
 pub enum WebSearchType {
-    Google,
-    YouTube,
+    Google(String),
+    YouTube(String),
 }
 
 impl SeatchType {
-    fn is_calculator(_str: &str) -> (bool, Option<f64>) {
-        match meval::eval_str(_str) {
-            Ok(res) => (true, Some(res)),
-            Err(_) => (false, None),
-        }
+    fn has_search_prefix(str: &str) -> (bool, SeatchType) {
+        let t = match str {
+            s if s.starts_with("!g") => {
+                SeatchType::WebSearch(WebSearchType::Google(s[2..].to_string()))
+            }
+            s if s.starts_with("!y") => {
+                SeatchType::WebSearch(WebSearchType::YouTube(s[2..].to_string()))
+            }
+            s if s.starts_with("http") => SeatchType::Web(s[2..].to_string()),
+            s if s.starts_with("!f") => SeatchType::File,
+            s if s.starts_with("!sh") => SeatchType::ShellCommand(s[3..].to_string()),
+            _ => return (false, SeatchType::App),
+        };
+        (true, t)
     }
 
-    fn is_web(str: &str) -> bool {
-        str.starts_with("http://") || str.starts_with("https://")
-    }
-
-    fn is_web_search(str: &str) -> (bool, WebSearchType) {
-        match str {
-            s if s.starts_with("!g") => (true, WebSearchType::Google),
-            s if s.starts_with("!y") => (true, WebSearchType::YouTube),
-            _ => (false, WebSearchType::Google),
-        }
-    }
-
-    fn is_file(str: &str) -> bool {
-        str.starts_with("!f")
-    }
-
-    fn is_app(str: &str) -> bool {
-        let re = Regex::new(r"[^\p{L}\p{N}]").unwrap();
-
-        if re.is_match(str) {
-            return false;
-        }
-
-        true
+    fn is_application(str: &str) -> bool {
+        str.split_whitespace().count() <= 3 && Regex::new(r"^[a-zA-Z0-9 ]+$").unwrap().is_match(str)
     }
 }
 
@@ -66,19 +51,11 @@ impl FromStr for SeatchType {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match (
-            Self::is_calculator(s),
-            Self::is_web(s),
-            Self::is_web_search(s),
-            Self::is_file(s),
-            Self::is_app(s),
-        ) {
-            ((true, res), _, _, _, _) => Ok(SeatchType::Calculator(res)),
-            (_, true, _, _, _) => Ok(SeatchType::Web),
-            (_, _, (true, t), _, _) => Ok(SeatchType::WebSearch(t)),
-            (_, _, _, true, _) => Ok(SeatchType::File),
-            (_, _, _, _, true) => Ok(SeatchType::App),
-            _ => Ok(SeatchType::WebSearch(WebSearchType::Google)),
+        match (meval::eval_str(s), Self::has_search_prefix(s)) {
+            (Ok(r), _) => Ok(SeatchType::Calculator(Some(r))),
+            (_, (true, st)) => Ok(st),
+            (_, (false, st)) if Self::is_application(s) => Ok(st),
+            _ => Ok(SeatchType::WebSearch(WebSearchType::Google(s.to_string()))),
         }
     }
 }

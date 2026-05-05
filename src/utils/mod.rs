@@ -1,5 +1,6 @@
 pub mod applications;
 pub mod css;
+pub mod terminal;
 //pub mod web_browser;
 //pub mod workspaces;
 
