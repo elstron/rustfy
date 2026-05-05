@@ -1,11 +1,14 @@
 mod config;
 mod enums;
+mod impls;
 mod keyboard;
 mod resources;
 mod selector;
+mod traits;
 mod ui;
 mod utils;
 mod wrappers;
+
 use config::layer_shell_configure;
 use glib::subclass::types::ObjectSubclassIsExt;
 use gtk::prelude::*;

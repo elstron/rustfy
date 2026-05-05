@@ -1,3 +1,4 @@
+use crate::traits::actions::HandleReturnAction;
 use crate::ui::window::MainWindow;
 use glib::subclass::types::ObjectSubclassIsExt;
 use gtk::prelude::*;
@@ -19,7 +20,8 @@ impl MainWindow {
                         glib::signal::Propagation::Stop
                     }
                     Key::Return => {
-                        this.imp().apps_revealer.launch_selected(None);
+                        this.handle_return_action(&this.imp().search_entry.text());
+
                         glib::signal::Propagation::Stop
                     }
                     _ => glib::signal::Propagation::Proceed,

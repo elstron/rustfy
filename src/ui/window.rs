@@ -8,6 +8,8 @@ mod imp {
 
     use std::{cell::RefCell, rc::Rc};
 
+    use crate::enums::SeatchType;
+
     use super::*;
 
     #[derive(Default, gtk::CompositeTemplate)]
@@ -37,6 +39,7 @@ mod imp {
         pub file_revealer: TemplateChild<FileRevealer>,
 
         pub search_query: Rc<RefCell<String>>,
+        pub current_search_type: Rc<RefCell<Option<SeatchType>>>,
     }
 
     #[glib::object_subclass]
