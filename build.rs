@@ -21,8 +21,18 @@ fn main() {
 
         match status {
             Ok(s) if s.success() => {}
-            _ => {
-                panic!("glib-compile-resources failed. Please run 'meson setup builddir && meson compile -C builddir' first.");
+            Ok(s) => {
+                eprintln!("cargo:warning=glib-compile-resources returned non-zero exit code ({}). Skipping automatic resource compilation.", s);
+                eprintln!("cargo:warning=Please run 'meson setup builddir && meson compile -C builddir' or provide a pre-built data/rustfy.gresource.");
+            }
+            Err(e) => {
+                if e.kind() == std::io::ErrorKind::NotFound {
+                    eprintln!("cargo:warning=glib-compile-resources not found in PATH. Skipping automatic resource compilation.");
+                    eprintln!("cargo:warning=On Windows you can install the GTK/GLib tooling (for example via MSYS2) or build resources with Meson.");
+                } else {
+                    eprintln!("cargo:warning=Failed to run glib-compile-resources: {}. Skipping automatic resource compilation.", e);
+                }
+                eprintln!("cargo:warning=Ensure data/rustfy.gresource exists or run Meson to build it before running the app.");
             }
         }
     }
