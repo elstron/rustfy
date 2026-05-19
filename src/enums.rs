@@ -27,14 +27,18 @@ pub enum WebSearchType {
 
 impl SeatchType {
     fn has_search_prefix(str: &str) -> (bool, SeatchType) {
-        let t = match str {
+        if str.len() < 2 || !str.starts_with('!') {
+            return (false, SeatchType::App);
+        }
+
+        let t = match str.trim() {
             s if s.starts_with("!g") => {
                 SeatchType::WebSearch(WebSearchType::Google(s[2..].to_string()))
             }
             s if s.starts_with("!y") => {
                 SeatchType::WebSearch(WebSearchType::YouTube(s[2..].to_string()))
             }
-            s if s.starts_with("http") => SeatchType::Web(s[2..].to_string()),
+            s if s.starts_with("!w") => SeatchType::Web(s[2..].to_string()),
             s if s.starts_with("!f") => SeatchType::File,
             s if s.starts_with("!sh") => SeatchType::ShellCommand(s[3..].to_string()),
             _ => return (false, SeatchType::App),

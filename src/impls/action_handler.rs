@@ -18,7 +18,7 @@ impl HandleReturnAction for MainWindow {
                 let url = if site.starts_with("http://") || site.starts_with("https://") {
                     site
                 } else {
-                    format!("http://{}", site)
+                    format!("https://{}", site.trim())
                 };
                 let _ = Command::new("xdg-open").arg(&url).spawn();
                 self.close();
